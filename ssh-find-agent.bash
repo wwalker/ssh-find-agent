@@ -99,6 +99,7 @@ find_live_ssh_agents() {
 
 
 find_all_agent_sockets() {
+	_LIVE_AGENT_LIST=
 	find_all_ssh_agent_sockets
 	find_ssh_agent_pids
 	find_all_gpg_agent_sockets
@@ -109,6 +110,6 @@ find_all_agent_sockets() {
 	find_live_gpg_agents
 	find_live_gnome_keyring_agents
 	_debug_print "$_LIVE_AGENT_LIST"
-	printf "%s\n" "$_LIVE_AGENT_LIST" | sed -e 's/ /\n/g' | sort -n -t: -k 2
+	printf "%s\n" "$_LIVE_AGENT_LIST" | sed -e 's/ /\n/g' | sort -n -t: -k 2 -k 1
 }
 
