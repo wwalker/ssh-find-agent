@@ -99,7 +99,7 @@ find_all_agent_sockets() {
 	find_all_ssh_agent_sockets
 	find_all_gpg_agent_sockets
 	find_all_gnome_keyring_agent_sockets
-	find_all_osx_keychain_sockets
+	find_all_osx_keychain_agent_sockets
 	find_live_ssh_agents
 	find_live_gpg_agents
 	find_live_gnome_keyring_agents
