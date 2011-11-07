@@ -43,7 +43,7 @@ test_agent_socket() {
 	if [[ $result -eq 0 ]]
 	then
 		# contactible and has keys loaded
-		_KEY_COUNT=`SSH_AUTH_SOCK=$SOCKET ssh-add -l | wc -l`
+		_KEY_COUNT=`SSH_AUTH_SOCK=$SOCKET ssh-add -l | wc -l | tr -d ' '`
 	fi
 
 	if [[ $result -eq 1 ]]
@@ -103,6 +103,11 @@ find_all_agent_sockets() {
 	find_live_ssh_agents
 	find_live_gpg_agents
 	find_live_gnome_keyring_agents
+	find_live_osx_keychain_agents
 	_debug_print "$_LIVE_AGENT_LIST"
 	printf "%s\n" "$_LIVE_AGENT_LIST" | sed -e 's/ /\n/g' | sort -n -t: -k 2 -k 1
+}
+
+set_ssh_agent_socket() {
+  eval "SSH_AUTH_SOCK=$(find_all_agent_sockets|tail -n 1|awk -F: '{print $1}')"
 }
