@@ -109,5 +109,5 @@ find_all_agent_sockets() {
 }
 
 set_ssh_agent_socket() {
-  eval "SSH_AUTH_SOCK=$(find_all_agent_sockets|tail -n 1|awk -F: '{print $1}')"
+  SSH_AUTH_SOCK=$(find_all_agent_sockets|tail -n 1|awk -F: '{print $1}')
 }
