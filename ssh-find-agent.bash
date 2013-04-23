@@ -14,17 +14,17 @@ _debug_print() {
 }
 
 find_all_ssh_agent_sockets() {
-	_SSH_AGENT_SOCKETS=`find /tmp -type s -name agent.\* 2> /dev/null | grep '/tmp/ssh-.*/agent.*'`
+	_SSH_AGENT_SOCKETS=`find /tmp/ -type s -name agent.\* 2> /dev/null | grep '/tmp/ssh-.*/agent.*'`
 	_debug_print "$_SSH_AGENT_SOCKETS"
 }
 
 find_all_gpg_agent_sockets() {
-	_GPG_AGENT_SOCKETS=`find /tmp -type s -name S.gpg-agent.ssh 2> /dev/null | grep '/tmp/gpg-.*/S.gpg-agent.ssh'`
+	_GPG_AGENT_SOCKETS=`find /tmp/ -type s -name S.gpg-agent.ssh 2> /dev/null | grep '/tmp/gpg-.*/S.gpg-agent.ssh'`
 	_debug_print "$_GPG_AGENT_SOCKETS"
 }
 
 find_all_gnome_keyring_agent_sockets() {
-	_GNOME_KEYRING_AGENT_SOCKETS=`find /tmp -type s -name ssh 2> /dev/null | grep '/tmp/keyring-.*/ssh$'`
+	_GNOME_KEYRING_AGENT_SOCKETS=`find /tmp/ -type s -name ssh 2> /dev/null | grep '/tmp/keyring-.*/ssh$'`
 	_debug_print "$_GNOME_KEYRING_AGENT_SOCKETS"
 }
 
