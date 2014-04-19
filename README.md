@@ -5,6 +5,8 @@ ssh-find-agent is a tool for locating existing ssh compatible agent processes (e
 
 ssh-find-agent is written in bash due to it's near ubiquitousness.
 
+NOTE: This project is dead.  It is dead because I found keychain (https://github.com/funtoo/keychain) and prefer it to what I had written and planned to add.
+
 Usage
 -----
 
