@@ -29,6 +29,7 @@ find_all_gnome_keyring_agent_sockets() {
 }
 
 find_all_osx_keychain_agent_sockets() {
+	[[ -n "$TMPDIR" ]] || TMPDIR=/tmp
 	_OSX_KEYCHAIN_AGENT_SOCKETS=`find $TMPDIR/ -type s -regex '.*/ssh-.*/agent..*$'  2> /dev/null`
 	_debug_print "$_OSX_KEYCHAIN_AGENT_SOCKETS"
 }
