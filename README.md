@@ -1,17 +1,21 @@
-ssh-find-agent
-==============
+# ssh-find-agent
 
-ssh-find-agent is a tool for locating existing ssh compatible agent processes (e.g., ssh-agent, gpg-agent, gnome-keyring, osx-keychain); and, optionally, setting SSH_AUTH_SOCK accordingly.
+ssh-find-agent is a tool for locating existing ssh compatible agent processes (e.g., ssh-agent, gpg-agent, gnome-keyring, osx-keychain); and, optionally, setting `SSH_AUTH_SOCK` accordingly.
 
-ssh-find-agent is written in bash due to it's near ubiquitousness.
+## Usage
 
-NOTE: This project is dead.  It is dead because I found keychain (https://github.com/funtoo/keychain) and prefer it to what I had written and planned to add.
+somewhere in shell initialization (`~/.bashrc` or `~./.zshrc`)
 
-Usage
------
+```bash
+. ssh-find-agent.sh
+set_ssh_agent_socket
+if [ -z "$SSH_AUTH_SOCK" ]
+then
+   eval $(ssh_agent) > /dev/null
+   ssh-add -l >/dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
+fi
+```
 
-Nowhere near done, but this works for now:
+## Status
 
-. ssh-find-agent.bash; set_ssh_agent_socket
-
-Copyright (C) 2011 by Wayne Walker <wwalker@solid-constructs.com>
+Instead of this script you could/should use [keychain](https://github.com/funtoo/keychain)
