@@ -21,7 +21,9 @@ fi
 ```
 
 To choose the agent manually run
-```set_ssh_agent_socket -c```
+```bash
+set_ssh_agent_socket -c
+```
 
 NOTE: The choose option is Useful when you actually want multiple agents forwaded.  eg. pairing
 
