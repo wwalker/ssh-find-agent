@@ -12,7 +12,7 @@ Somewhere in shell initialization (`~/.bashrc` or `~./.zshrc`)
 
 Add the following to automatically choose the first agent
 ```bash
-set_ssh_agent_socket
+ssh-find-agent -a
 if [ -z "$SSH_AUTH_SOCK" ]
 then
    eval $(ssh_agent) > /dev/null
@@ -22,7 +22,12 @@ fi
 
 To choose the agent manually run
 ```bash
-set_ssh_agent_socket -c
+ssh-find-agent -c
+```
+
+To list the agents run
+```bash
+ssh-find-agent
 ```
 
 NOTE: The choose option is Useful when you actually want multiple agents forwaded.  eg. pairing
