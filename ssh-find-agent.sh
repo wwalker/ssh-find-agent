@@ -1,3 +1,4 @@
+#!/bin/bash
 # Copyright (C) 2011 by Wayne Walker <wwalker@solid-constructs.com>
 #
 # Released under one of the versions of the MIT License.
@@ -23,6 +24,7 @@
 # THE SOFTWARE.
 
 _LIVE_AGENT_LIST=""
+declare -a _LIVE_AGENT_SOCK_LIST=()
 
 _debug_print() {
 	if [[ $_DEBUG -gt 0 ]]
@@ -123,10 +125,44 @@ find_all_agent_sockets() {
 	find_live_gpg_agents
 	find_live_gnome_keyring_agents
 	find_live_osx_keychain_agents
-	_debug_print "$_LIVE_AGENT_LIST"
-	printf "%s\n" "$_LIVE_AGENT_LIST" | sed -e 's/ /\n/g' | sort -n -t: -k 2 -k 1
+	#_debug_print "$_LIVE_AGENT_LIST"
+	_LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1)
+	_LIVE_AGENT_SOCK_LIST=()
+	#printf "%s\n" "$_LIVE_AGENT_LIST" | sed -e 's/ /\n/g' | sort -n -t: -k 2 -k 1
+	i=0
+	for a in $_LIVE_AGENT_LIST ; do
+		sock=${a/:*/} 
+		_LIVE_AGENT_SOCK_LIST[$i]=$sock
+		akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l) 
+		printf "%i) %s\n\t%s\n" $i "$a" "$akeys"
+		i=$((i+1))
+	done
 }
 
 set_ssh_agent_socket() {
-  export SSH_AUTH_SOCK=$(find_all_agent_sockets|tail -n 1|awk -F: '{print $1}')
+	if [ "$1" = "-c" -o "$1" = "--choose" ]
+	then
+		find_all_agent_sockets
+
+		if [ -z "$_LIVE_AGENT_LIST" ] ; then
+			echo "No agents found"
+			return
+		fi
+
+		echo -n "Choose (0-$i)? "
+		read choice
+		if [ -n "$choice" ]
+		then
+			echo "Setting export SSH_AUTH_SOCK=${_LIVE_AGENT_SOCK_LIST[$choice]}"
+			export SSH_AUTH_SOCK=${_LIVE_AGENT_SOCK_LIST[$choice]}
+		fi
+	else
+		# Choose the first available
+			export SSH_AUTH_SOCK=$(find_all_agent_sockets|tail -n 1|awk -F: '{print $1}')
+	fi
 }
+
+if [[ ! "$0" == "-bash" ]]
+then
+	find_all_agent_sockets
+fi
