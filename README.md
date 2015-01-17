@@ -4,11 +4,15 @@ ssh-find-agent is a tool for locating existing ssh compatible agent processes (e
 
 ## Usage
 
-somewhere in shell initialization (`~/.bashrc` or `~./.zshrc`)
+Somewhere in shell initialization (`~/.bashrc` or `~./.zshrc`)
 
 ```bash
 . ssh-find-agent.sh
-set_ssh_agent_socket
+```
+
+Add the following to automatically choose the first agent
+```bash
+ssh-find-agent -a
 if [ -z "$SSH_AUTH_SOCK" ]
 then
    eval $(ssh_agent) > /dev/null
@@ -16,6 +20,21 @@ then
 fi
 ```
 
+To choose the agent manually run
+```bash
+ssh-find-agent -c
+```
+
+To list the agents run
+```bash
+ssh-find-agent
+```
+
+NOTE: The choose option is Useful when you actually want multiple agents forwaded.  eg. pairing
+
 ## Status
 
-Instead of this script you could/should use [keychain](https://github.com/funtoo/keychain)
+## Alternatives
+
+  * [keychain](https://github.com/funtoo/keychain)
+  * [envoy](https://github.com/vodik/envoy)
