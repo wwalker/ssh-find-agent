@@ -131,6 +131,23 @@ find_all_agent_sockets() {
 	_debug_print "$_LIVE_AGENT_LIST"
 	_LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1)
 	_LIVE_AGENT_SOCK_LIST=()
+	if [ -z "$_LIVE_AGENT_LIST" ]
+	then
+		echo "No agents found"
+		read -p "Create an agent and add keys (y/n)?" -n 1 -r
+		echo # (optional) move to a new line
+		if [[ $REPLY =~ ^[Yy]$ ]]
+		then
+			if [ -z "$SSH_AUTH_SOCK" ]
+			then
+			    eval $(ssh_agent) > /dev/null
+			    ssh-add -l >/dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
+			fi
+		elif  [[ ! $REPLY =~ ^[Yy]$ ]]; then
+			:
+		fi
+	fi
+	
 	if [[ $_SHOW_IDENTITY -gt 0 ]]
 	then
 		i=0
@@ -152,7 +169,7 @@ set_ssh_agent_socket() {
 		find_all_agent_sockets -i
 
 		if [ -z "$_LIVE_AGENT_LIST" ] ; then
-			echo "No agents found"
+			echo "No agents found, exit"
 			return
 		fi
 
