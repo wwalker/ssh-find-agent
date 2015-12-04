@@ -48,6 +48,7 @@ find_all_gnome_keyring_agent_sockets() {
 }
 
 find_all_osx_keychain_agent_sockets() {
+	# This will repeat each socket of find_all_ssh_agent_sockets().
 	[[ -n "$TMPDIR" ]] || TMPDIR=/tmp
 	_OSX_KEYCHAIN_AGENT_SOCKETS=`find $TMPDIR/ -type s -regex '.*/ssh-.*/agent..*$' 2> /dev/null`
 	_debug_print "$_OSX_KEYCHAIN_AGENT_SOCKETS"
@@ -76,7 +77,10 @@ test_agent_socket() {
 	then
 		if [[ -n "$_LIVE_AGENT_LIST" ]]
 		then
-			_LIVE_AGENT_LIST="${_LIVE_AGENT_LIST} ${SOCKET}:$_KEY_COUNT"
+			# Test if it is already in _LIVE_AGENT_LIST
+			if [[ "${_LIVE_AGENT_LIST}/${SOCKET}:$_KEY_COUNT}" == "${_LIVE_AGENT_LIST}"  ]]; then
+				_LIVE_AGENT_LIST="${_LIVE_AGENT_LIST} ${SOCKET}:$_KEY_COUNT"
+			fi
 		else
 			_LIVE_AGENT_LIST="${SOCKET}:$_KEY_COUNT"
 		fi
@@ -132,23 +136,6 @@ find_all_agent_sockets() {
 	_LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1)
 	_LIVE_AGENT_SOCK_LIST=()
 
-	if [ -z "$_LIVE_AGENT_LIST" ]
-	then
-		echo "No agents found"
-		read -p "Create an agent and add keys (y/n)?" -n 1 -r
-		echo # (optional) move to a new line
-		if [[ $REPLY =~ ^[Yy]$ ]]
-		then
-			if [ -z "$SSH_AUTH_SOCK" ]
-			then
-			    eval $(ssh_agent) > /dev/null
-			    ssh-add -l >/dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
-			fi
-		elif  [[ ! $REPLY =~ ^[Yy]$ ]]; then
-			:
-		fi
-	fi
-	
 	if [[ $_SHOW_IDENTITY -gt 0 ]]
 	then
 		i=0
@@ -161,6 +148,25 @@ find_all_agent_sockets() {
 		done
 	else
 		printf "%s\n" "$_LIVE_AGENT_LIST" | sed -e 's/ /\n/g' | sort -n -t: -k 2 -k 1
+	fi
+
+	if [ -z "$_LIVE_AGENT_LIST" ]
+	then
+		echo "No agents found"
+		read -p "Create an agent and add keys (y/n)?" -n 1 -r
+		echo # (optional) move to a new line
+		if [[ $REPLY =~ ^[Yy]$ ]]
+		then
+			if [ -z "$SSH_AUTH_SOCK" ]
+			then
+				eval "$(ssh-agent -s)" > /dev/null
+				ssh-add -l > /dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
+			fi
+		elif  [[ ! $REPLY =~ ^[Yy]$ ]]; then
+			:
+		fi
+	else
+		ssh-add -l > /dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
 	fi
 }
 
