@@ -61,6 +61,8 @@ ssh-find-agent -c
 
 ## Status
 
+1. Aslo update `SSH_AGENT_PID`.
+
 ## Alternatives
 
 * [keychain](https://github.com/funtoo/keychain)
