@@ -4,11 +4,11 @@ ssh-find-agent is a tool for locating existing ssh compatible agent processes (e
 
 Pay attention to code below: create a new agent and add/cache keys to it:
 
-```
+```bash
 if [ -z "$SSH_AUTH_SOCK" ]
 then
-   eval $(ssh_agent) > /dev/null
-   ssh-add -l >/dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
+	eval $(ssh_agent) > /dev/null
+	ssh-add -l >/dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
 fi
 ```
 
@@ -22,7 +22,7 @@ or
 source /path/to/ssh-find-agent.sh
 ```
 
-Argument `-a` *automatically* choose the first agent:
+Argument `-a` *automatically* chooses the first agent:
 
 ```bash
 ssh-find-agent -a
@@ -34,7 +34,7 @@ Argument `-c` let you choose the agent *manually*:
 ssh-find-agent -c
 ```
 
-Without any arguments, it just list existing agents:
+Without any arguments, it just lists existing agents:
 
 ```bash
 ssh-find-agent

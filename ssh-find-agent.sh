@@ -131,6 +131,7 @@ find_all_agent_sockets() {
 	_debug_print "$_LIVE_AGENT_LIST"
 	_LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1)
 	_LIVE_AGENT_SOCK_LIST=()
+
 	if [ -z "$_LIVE_AGENT_LIST" ]
 	then
 		echo "No agents found"
