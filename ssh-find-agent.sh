@@ -175,7 +175,7 @@ find_all_agent_sockets() {
 	    echo "Ready to run ssh"
 	elif [[ $status -eq 2 ]]
 	then
-	    printf "Agent found!\n  Run with '-a' or '-c' argument to set SSH_AUTH_SOCK and SSH_AGENT_PID.\n"
+	    printf "Agent found!\n  '-a' or '-c' argument sets SSH_AUTH_SOCK and SSH_AGENT_PID.\n"
 	fi
     fi
 }
