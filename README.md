@@ -5,26 +5,41 @@ ssh-find-agent is a tool for locating existing ssh compatible agent processes (e
 Pay attention to code below: create a new agent and/or create alias for temporal *ssh*:
 
 ```bash
-if [ -z "$_LIVE_AGENT_LIST" ]
-then
-	echo "No agents found"
-	read -p "Create an agent and add keys (y/n)?" -n 1 -r
-	echo # (optional) move to a new line
-	if [[ $REPLY =~ ^[Yy]$ ]]
+    if [ -z "$_LIVE_AGENT_LIST" ]
+    then
+        echo "No agents found"
+        read -p "Create an agent and add keys (y/n)?" -n 1 -r
+        echo # (optional) move to a new line
+        if [[ $REPLY =~ ^[Yy]$ ]]
+        then
+            if [ -z "$SSH_AUTH_SOCK" ]
+            then
+                eval "$(ssh-agent -s)" > /dev/null
+            fi
+        elif  [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Exit without creating"
+	    return
+        fi
+    else
+	ssh-add -l &> /dev/null
+	local status=$?
+	if [[ $status -eq 1 ]]
 	then
-		if [ -z "$SSH_AUTH_SOCK" ]
-		then
-			eval "$(ssh-agent -s)" > /dev/null
-			ssh-add -l > /dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
-		fi
-	elif  [[ ! $REPLY =~ ^[Yy]$ ]]; then
-		:
+	    alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'
+	    echo "Ready to run ssh"
+	elif [[ $status -eq 2 ]]
+	then
+	    printf "Agent found!\n  Run with '-a' or '-c' argument to set SSH_AUTH_SOCK and SSH_AGENT_PID.\n"
 	fi
-else
-	ssh-add -l > /dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
-fi
+    fi
 ```
-Temporal *ssh* alias will prompt for public-key passphrase at the very firt execution of *ssh*. As you know, `ssh-add` without any arguments only add default keys *~/.ssh/id_rsa*, *~/.ssh/id_dsa* and *~/.ssh/identity*. Other keys (i.e. defined in *~/ssh/config*) won't be added!
+
+1. Temporal *ssh* alias will prompt for public-key passphrase at the very firt execution of *ssh*. As you know, `ssh-add` without any arguments only add default keys *~/.ssh/id_rsa*, *~/.ssh/id_dsa* and *~/.ssh/identity*. Other keys (i.e. defined in *~/ssh/config*) won't be added!
+2. `$status -eq 2` means agent exists on system. However, in current login/session `SSH_AUTH_SOCK` and `SSH_AGENT_PID` variables are not *export*ed. This happens when you login a system as a different user account or when you login in a different virtual terminal/console.
+
+    In such a login environment, *ssh-add* will report error since it depends on `SSH_AUTH_SOCK` environment variable:
+
+        Could not open a connection to your authentication agent.
 
 ## Usage
 
@@ -62,7 +77,7 @@ ssh-find-agent -c
 ## Status
 
 1. <s>Aslo export `SSH_AGENT_PID`</s>.
-2. `~ $ ssh-add` only add default key files?
+2. <s>`~ $ ssh-add` only add default key files?</s> Yes.
 
 ## Alternatives
 

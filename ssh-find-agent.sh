@@ -161,26 +161,35 @@ find_all_agent_sockets() {
             if [ -z "$SSH_AUTH_SOCK" ]
             then
                 eval "$(ssh-agent -s)" > /dev/null
-                ssh-add -l > /dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
             fi
         elif  [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            :
+            echo "Exit without creating"
+	    return
         fi
     else
-        ssh-add -l > /dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
+	ssh-add -l &> /dev/null
+	local status=$?
+	if [[ $status -eq 1 ]]
+	then
+	    alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'
+	    echo "Ready to run ssh"
+	elif [[ $status -eq 2 ]]
+	then
+	    printf "Agent found!\n  Run with '-a' or '-c' argument to set SSH_AUTH_SOCK and SSH_AGENT_PID.\n"
+	fi
     fi
 }
 
 set_ssh_agent_socket() {
+   find_all_agent_sockets -i
+
+   if [ -z "$_LIVE_AGENT_LIST" ] ; then
+       echo "No agents found, exit"
+       return
+   fi
+
     if [ "$1" = "-c" -o "$1" = "--choose" ]
     then
-        find_all_agent_sockets -i
-
-        if [ -z "$_LIVE_AGENT_LIST" ] ; then
-            echo "No agents found, exit"
-            return
-        fi
-
         echo -n "Choose (1-${#_LIVE_AGENT_SOCK_LIST[@]})? "
         read choice
         if [ -n "$choice" ]
@@ -194,7 +203,9 @@ set_ssh_agent_socket() {
         fi
     else
         # Choose the first available
-        SSH_AUTH_SOCK=$(find_all_agent_sockets | tail -n 1 | awk -F: '{print $1}')
+        # SSH_AUTH_SOCK=$(find_all_agent_sockets | tail -n 1 | awk -F: '{print $1}')
+	# or
+	SSH_AUTH_SOCK=${_LIVE_AGENT_SOCK_LIST[0]}
     fi
 
     [ -n "$SSH_AUTH_SOCK" ] && export SSH_AUTH_SOCK
