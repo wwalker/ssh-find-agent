@@ -78,12 +78,13 @@ test_agent_socket() {
         if [[ -n "$_LIVE_AGENT_LIST" ]]
         then
             # Test if it is already in _LIVE_AGENT_LIST
-            if [[ "${_LIVE_AGENT_LIST}/${SOCKET}:$_KEY_COUNT}" == "${_LIVE_AGENT_LIST}"  ]]; then
+            if [[ "${_LIVE_AGENT_LIST}" != *"${SOCKET}:$_KEY_COUNT"* ]]; then
                 _LIVE_AGENT_LIST="${_LIVE_AGENT_LIST} ${SOCKET}:$_KEY_COUNT"
             fi
         else
             _LIVE_AGENT_LIST="${SOCKET}:$_KEY_COUNT"
         fi
+
         return 0
     fi
 
@@ -140,7 +141,7 @@ find_all_agent_sockets() {
     then
         i=0
         for a in $_LIVE_AGENT_LIST ; do
-            sock=${a/:*/} 
+            sock=${a/:*/}
             _LIVE_AGENT_SOCK_LIST[$i]=$sock
             akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l) 
             printf "%i) %s\n\t%s\n" $((i+1)) "$a" "$akeys"
@@ -189,13 +190,18 @@ set_ssh_agent_socket() {
                 echo "Invalid choice"
                 return
             fi
-            echo "Setting export SSH_AUTH_SOCK=${_LIVE_AGENT_SOCK_LIST[$n]}"
-            export SSH_AUTH_SOCK=${_LIVE_AGENT_SOCK_LIST[$n]}
+            SSH_AUTH_SOCK=${_LIVE_AGENT_SOCK_LIST[$n]}
         fi
     else
         # Choose the first available
-        export SSH_AUTH_SOCK=$(find_all_agent_sockets|tail -n 1|awk -F: '{print $1}')
+        SSH_AUTH_SOCK=$(find_all_agent_sockets | tail -n 1 | awk -F: '{print $1}')
     fi
+
+    [ -n "$SSH_AUTH_SOCK" ] && export SSH_AUTH_SOCK
+    echo "export SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+    SSH_AGENT_PID=$((`echo $SSH_AUTH_SOCK | cut -d. -f2` + 1))
+    [ -n "$SSH_AGENT_PID" ] && export SSH_AGENT_PID
+    echo "export SSH_AGENT_PID=$SSH_AGENT_PID"
 }
 
 ssh-find-agent() {

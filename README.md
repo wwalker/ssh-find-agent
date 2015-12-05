@@ -1,6 +1,6 @@
 # ssh-find-agent
 
-ssh-find-agent is a tool for locating existing ssh compatible agent processes (e.g., ssh-agent, gpg-agent, gnome-keyring, osx-keychain); and, optionally, setting `SSH_AUTH_SOCK` accordingly.
+ssh-find-agent is a tool for locating existing ssh compatible agent processes (e.g., ssh-agent, gpg-agent, gnome-keyring, osx-keychain); and, optionally, setting `SSH_AUTH_SOCK` and `SSH_AGENT_PID` accordingly.
 
 Pay attention to code below: create a new agent and/or create alias for temporal *ssh*:
 
@@ -24,7 +24,7 @@ else
 	ssh-add -l > /dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
 fi
 ```
-Temporal *ssh* alias will prompt for public-key passphrase at the very firt execution of *ssh*.
+Temporal *ssh* alias will prompt for public-key passphrase at the very firt execution of *ssh*. As you know, `ssh-add` without any arguments only add default keys *~/.ssh/id_rsa*, *~/.ssh/id_dsa* and *~/.ssh/identity*. Other keys (i.e. defined in *~/ssh/config*) won't be added!
 
 ## Usage
 
@@ -61,7 +61,8 @@ ssh-find-agent -c
 
 ## Status
 
-1. Aslo update `SSH_AGENT_PID`.
+1. <s>Aslo export `SSH_AGENT_PID`</s>.
+2. `~ $ ssh-add` only add default key files?
 
 ## Alternatives
 
