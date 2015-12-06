@@ -5,7 +5,7 @@ ssh-find-agent is a tool:
 1. locating existing ssh compatible agent sockets (e.g., ssh-agent, gpg-agent, gnome-keyring, osx-keychain).
 2. prompt to create one if no agents found.
 3. optionally (invoked with `-a` or `-c`), sets `SSH_AUTH_SOCK`, `SSH_AGENT_PID` environment variables accordingly.
-    1. and set temporal ssh alias
+    1. and/or set temporal ssh alias
 
 ```bash
 create_an_agent_socket() {
@@ -19,7 +19,8 @@ create_an_agent_socket() {
 	fi
     else
 	echo "Exit without creating"
-	exit 1
+	# kill -INT $$
+	return 1
     fi
 }
 
@@ -37,7 +38,7 @@ ssh-add -l > /dev/null || alias ssh='ssh-add -l > /dev/null || ssh-add && unalia
 
 ## Usage
 
-Somewhere in shell initialization (`~/.bashrc` or `~/.zshrc`)
+Somewhere in shell initialization (`~/.bashrc` or `~/.zshrc`). Since the script will also export environment variables, it should be *sourced* instead of *direct execution* on shell prompt.
 
 ```bash
 . /path/to/ssh-find-agent.sh

@@ -120,17 +120,18 @@ find_live_ssh_agents() {
 }
 
 create_an_agent_socket() {
-    echo "No agents found"
+    echo "No agents found!"
     read -p "Create an agent and add keys (y/n)?" -n 1 -r
     echo # (optional) move to a new line
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
-	if [ -z "$SSH_AUTH_SOCK" && -z "$SSH_AGENT_PID"]; then
+	if [ -z "$SSH_AUTH_SOCK"  -a -z "$SSH_AGENT_PID" ]; then
 	    eval "$(ssh-agent -s)" > /dev/null
 	fi
     else
 	echo "Exit without creating"
-	exit 1
+	# kill -INT $$
+	return 1
     fi
 }
 
@@ -155,14 +156,20 @@ set_ssh_alias() {
 check_ssh_add() {
     ssh-add -l &> /dev/null
     local status=$?
-    if [ $status -eq 1 ]; then
-	ssh-add -l > /dev/null || alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'
-	echo "alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'"
+    if [ $status -ne 2 ]; then
+	echo
+	echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
+	echo "SSH_AGENT_PID=$SSH_AGENT_PID"
+	if [ $status -eq 1 ]
+	then
+	    ssh-add -l > /dev/null || alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'
+	    echo "alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'"
+	else
+	    echo "Default key(s) added to agent!"
+	fi
 	printf "\nReady to ssh.\n"
-    elif [ $status -eq 2 ]; then
-	printf "\nNo agents associated! Run with '-a' or '-c' argument.\n"
     else
-	echo "Ready to ssh."
+	printf "\nNo agents associated! Run with '-a' or '-c' argument.\n"
     fi
 }
 
@@ -181,6 +188,7 @@ find_all_agent_sockets() {
 
     if [ -z "$_LIVE_AGENT_LIST" ]; then
 	create_an_agent_socket
+	[ $? -eq 1 ] && return
     fi
 
     print_all_agent_sockets
@@ -212,11 +220,8 @@ set_ssh_agent_socket() {
     fi
 
     [ -n "$SSH_AUTH_SOCK" ] && export SSH_AUTH_SOCK
-    echo
-    echo "export SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
     SSH_AGENT_PID=$((`echo $SSH_AUTH_SOCK | cut -d. -f2` + 1))
     [ -n "$SSH_AGENT_PID" ] && export SSH_AGENT_PID
-    echo "export SSH_AGENT_PID=$SSH_AGENT_PID"
 
     check_ssh_add
 }
