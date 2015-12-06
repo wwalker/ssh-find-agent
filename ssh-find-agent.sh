@@ -152,6 +152,20 @@ set_ssh_alias() {
     printf "\nReady to ssh.\n"
 }
 
+check_ssh_add() {
+    ssh-add -l &> /dev/null
+    local status=$?
+    if [ $status -eq 1 ]; then
+	ssh-add -l > /dev/null || alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'
+	echo "alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'"
+	printf "\nReady to ssh.\n"
+    elif [ $status -eq 2 ]; then
+	printf "\nNo agents associated! Run with '-a' or '-c' argument.\n"
+    else
+	echo "Ready to ssh."
+    fi
+}
+
 find_all_agent_sockets() {
     _LIVE_AGENT_LIST=
     find_all_ssh_agent_sockets
@@ -172,15 +186,7 @@ find_all_agent_sockets() {
     print_all_agent_sockets
 
     if [ "$1" = "-i" ]; then
-	ssh-add -l &> /dev/null
-	local status=$?
-	if [ $status -eq 1 ]; then
-	    set_ssh_alias
-	elif [ $status -eq 2 ]; then
-	    printf "\nNo agents associated! Run with '-a' or '-c' argument.\n"
-	else
-	    echo "Ready to ssh."
-	fi
+	check_ssh_add
     fi
 }
 
@@ -212,7 +218,7 @@ set_ssh_agent_socket() {
     [ -n "$SSH_AGENT_PID" ] && export SSH_AGENT_PID
     echo "export SSH_AGENT_PID=$SSH_AGENT_PID"
 
-    set_ssh_alias
+    check_ssh_add
 }
 
 ssh-find-agent() {
