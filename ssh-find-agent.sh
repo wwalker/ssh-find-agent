@@ -119,11 +119,40 @@ find_live_ssh_agents() {
     done
 }
 
-find_all_agent_sockets() {
-    _SHOW_IDENTITY=0
-    if [ "$1" = "-i" ] ; then
-        _SHOW_IDENTITY=1
+create_an_agent_socket() {
+    echo "No agents found"
+    read -p "Create an agent and add keys (y/n)?" -n 1 -r
+    echo # (optional) move to a new line
+    if [[ $REPLY =~ ^[Yy]$ ]]
+    then
+	if [ -z "$SSH_AUTH_SOCK" && -z "$SSH_AGENT_PID"]; then
+	    eval "$(ssh-agent -s)" > /dev/null
+	fi
+    else
+	echo "Exit without creating"
+	exit 1
     fi
+}
+
+print_all_agent_sockets() {
+    _LIVE_AGENT_SOCK_LIST=()
+    local i=0
+    for a in $_LIVE_AGENT_LIST ; do
+	sock=${a/:*/}
+	_LIVE_AGENT_SOCK_LIST[$i]=$sock
+	akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l) 
+	printf "%i) %s\n\t%s\n" $((i+1)) "$a" "$akeys"
+	i=$((i+1))
+    done
+}
+
+set_ssh_alias() {
+    ssh-add -l > /dev/null || alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'
+    echo "alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'"
+    printf "\nReady to ssh.\n"
+}
+
+find_all_agent_sockets() {
     _LIVE_AGENT_LIST=
     find_all_ssh_agent_sockets
     find_all_gpg_agent_sockets
@@ -135,58 +164,28 @@ find_all_agent_sockets() {
     find_live_osx_keychain_agents
     _debug_print "$_LIVE_AGENT_LIST"
     _LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1)
-    _LIVE_AGENT_SOCK_LIST=()
 
-    if [[ $_SHOW_IDENTITY -gt 0 ]]
-    then
-        i=0
-        for a in $_LIVE_AGENT_LIST ; do
-            sock=${a/:*/}
-            _LIVE_AGENT_SOCK_LIST[$i]=$sock
-            akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l) 
-            printf "%i) %s\n\t%s\n" $((i+1)) "$a" "$akeys"
-            i=$((i+1))
-        done
-    else
-        printf "%s\n" "$_LIVE_AGENT_LIST" | sed -e 's/ /\n/g' | sort -n -t: -k 2 -k 1
+    if [ -z "$_LIVE_AGENT_LIST" ]; then
+	create_an_agent_socket
     fi
 
-    if [ -z "$_LIVE_AGENT_LIST" ]
-    then
-        echo "No agents found"
-        read -p "Create an agent and add keys (y/n)?" -n 1 -r
-        echo # (optional) move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-            if [ -z "$SSH_AUTH_SOCK" ]
-            then
-                eval "$(ssh-agent -s)" > /dev/null
-            fi
-        elif  [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Exit without creating"
-	    return
-        fi
-    else
+    print_all_agent_sockets
+
+    if [ "$1" = "-i" ]; then
 	ssh-add -l &> /dev/null
 	local status=$?
-	if [[ $status -eq 1 ]]
-	then
-	    alias ssh='ssh-add -l > /dev/null || ssh-add && unalias ssh; ssh'
-	    echo "Ready to run ssh"
-	elif [[ $status -eq 2 ]]
-	then
-	    printf "Agent found!\n  '-a' or '-c' argument sets SSH_AUTH_SOCK and SSH_AGENT_PID.\n"
+	if [ $status -eq 1 ]; then
+	    set_ssh_alias
+	elif [ $status -eq 2 ]; then
+	    printf "\nNo agents associated! Run with '-a' or '-c' argument.\n"
+	else
+	    echo "Ready to ssh."
 	fi
     fi
 }
 
 set_ssh_agent_socket() {
-   find_all_agent_sockets -i
-
-   if [ -z "$_LIVE_AGENT_LIST" ] ; then
-       echo "No agents found, exit"
-       return
-   fi
+    find_all_agent_sockets
 
     if [ "$1" = "-c" -o "$1" = "--choose" ]
     then
@@ -203,16 +202,17 @@ set_ssh_agent_socket() {
         fi
     else
         # Choose the first available
-        # SSH_AUTH_SOCK=$(find_all_agent_sockets | tail -n 1 | awk -F: '{print $1}')
-	# or
 	SSH_AUTH_SOCK=${_LIVE_AGENT_SOCK_LIST[0]}
     fi
 
     [ -n "$SSH_AUTH_SOCK" ] && export SSH_AUTH_SOCK
+    echo
     echo "export SSH_AUTH_SOCK=$SSH_AUTH_SOCK"
     SSH_AGENT_PID=$((`echo $SSH_AUTH_SOCK | cut -d. -f2` + 1))
     [ -n "$SSH_AGENT_PID" ] && export SSH_AGENT_PID
     echo "export SSH_AGENT_PID=$SSH_AGENT_PID"
+
+    set_ssh_alias
 }
 
 ssh-find-agent() {
