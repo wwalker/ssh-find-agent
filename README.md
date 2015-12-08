@@ -18,9 +18,9 @@ create_an_agent_socket() {
 	    eval "$(ssh-agent -s)" > /dev/null
 	fi
     else
-	echo "Exit without creating"
-	# kill -INT $$
-	return 1
+        echo "Exit without creating"
+        # kill -INT $$
+        return 1
     fi
 }
 
