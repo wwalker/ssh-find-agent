@@ -125,9 +125,7 @@ create_an_agent_socket() {
     echo # (optional) move to a new line
     if [[ $REPLY =~ ^[Yy]$ ]]
     then
-	if [ -z "$SSH_AUTH_SOCK"  -a -z "$SSH_AGENT_PID" ]; then
-	    eval "$(ssh-agent -s)" > /dev/null
-	fi
+	eval "$(ssh-agent -s)" > /dev/null
     else
 	echo "Exit without creating"
 	# kill -INT $$
