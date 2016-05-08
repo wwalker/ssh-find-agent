@@ -129,7 +129,7 @@ find_all_agent_sockets() {
 	find_live_gnome_keyring_agents
 	find_live_osx_keychain_agents
 	_debug_print "$_LIVE_AGENT_LIST"
-	_LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1)
+	_LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -u -n -t: -k 2 -k 1)
 	_LIVE_AGENT_SOCK_LIST=()
 	if [[ $_SHOW_IDENTITY -gt 0 ]]
 	then
