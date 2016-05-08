@@ -153,7 +153,7 @@ set_ssh_agent_socket() {
 
 		if [ -z "$_LIVE_AGENT_LIST" ] ; then
 			echo "No agents found"
-			return
+			return 1
 		fi
 
 		echo -n "Choose (1-${#_LIVE_AGENT_SOCK_LIST[@]})? "
@@ -163,25 +163,34 @@ set_ssh_agent_socket() {
 			n=$((choice-1))
 			if [ -z "${_LIVE_AGENT_SOCK_LIST[$n]}" ] ; then
 				echo "Invalid choice"
-				return
+				return 1
 			fi
 			echo "Setting export SSH_AUTH_SOCK=${_LIVE_AGENT_SOCK_LIST[$n]}"
 			export SSH_AUTH_SOCK=${_LIVE_AGENT_SOCK_LIST[$n]}
 		fi
 	else
 		# Choose the first available
-			export SSH_AUTH_SOCK=$(find_all_agent_sockets|tail -n 1|awk -F: '{print $1}')
+		SOCK=$(find_all_agent_sockets|tail -n 1|awk -F: '{print $1}')
+		if [ -z "$SOCK" ] ; then
+			return 1
+		fi
+		export SSH_AUTH_SOCK=$SOCK
 	fi
+
+	return 0
 }
 
 ssh-find-agent() {
 	if [ "$1" = "-c" -o "$1" = "--choose" ]
 	then
 		set_ssh_agent_socket -c
+		return $?
 	elif [ "$1" = "-a" -o "$1" = "--auto" ]
 	then
-		set_ssh_agent_socket 
+		set_ssh_agent_socket
+		return $?
 	else
 		find_all_agent_sockets -i
+		return 0
 	fi
 }

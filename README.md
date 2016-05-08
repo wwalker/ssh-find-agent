@@ -15,9 +15,15 @@ Add the following to automatically choose the first agent
 ssh-find-agent -a
 if [ -z "$SSH_AUTH_SOCK" ]
 then
-   eval $(ssh_agent) > /dev/null
+   eval $(ssh-agent) > /dev/null
    ssh-add -l >/dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
 fi
+```
+
+... or, as `ssh-find-agent` with `-a` or `-c` returns non-zero if it cannot find a live-agent, simply:
+
+```bash
+ssh-find-agent -a || eval $(ssh-agent) > /dev/null
 ```
 
 To choose the agent manually run
