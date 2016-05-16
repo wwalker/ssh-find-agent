@@ -47,6 +47,9 @@ find_all_gnome_keyring_agent_sockets() {
 	_debug_print "$_GNOME_KEYRING_AGENT_SOCKETS"
 }
 
+# This function overlaps with find_all_ssh_agent_sockets on Centos
+# (this makes it list entries twice)
+# Maybe we should add a quick check to see if we are on osx
 find_all_osx_keychain_agent_sockets() {
 	[[ -n "$TMPDIR" ]] || TMPDIR=/tmp
 	_OSX_KEYCHAIN_AGENT_SOCKETS=`find $TMPDIR/ -type s -regex '.*/ssh-.*/agent..*$' 2> /dev/null`
@@ -120,14 +123,15 @@ find_all_agent_sockets() {
 		_SHOW_IDENTITY=1
 	fi
 	_LIVE_AGENT_LIST=
-	find_all_ssh_agent_sockets
-	find_all_gpg_agent_sockets
-	find_all_gnome_keyring_agent_sockets
-	find_all_osx_keychain_agent_sockets
 	find_live_ssh_agents
 	find_live_gpg_agents
 	find_live_gnome_keyring_agents
-	find_live_osx_keychain_agents
+  # We don't often remote into osx, and we only want live sockets
+  #find_live_osx_keychain_agents
+	#find_all_ssh_agent_sockets
+	#find_all_gpg_agent_sockets
+	#find_all_gnome_keyring_agent_sockets
+	#find_all_osx_keychain_agent_sockets
 	_debug_print "$_LIVE_AGENT_LIST"
 	_LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1)
 	_LIVE_AGENT_SOCK_LIST=()
