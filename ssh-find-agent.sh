@@ -117,6 +117,13 @@ find_live_ssh_agents() {
 	done
 }
 
+function fingerprints() {
+    local file="$1"
+    while read l; do
+        [[ -n $l && ${l###} = $l ]] && ssh-keygen -l -f /dev/stdin <<<$l
+    done < $file
+}
+
 find_all_agent_sockets() {
 	_SHOW_IDENTITY=0
 	if [ "$1" = "-i" ] ; then
@@ -135,14 +142,21 @@ find_all_agent_sockets() {
 	_debug_print "$_LIVE_AGENT_LIST"
 	_LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1)
 	_LIVE_AGENT_SOCK_LIST=()
+  _FINGERPRINTS=$(fingerprints ~/.ssh/authorized_keys)
 	if [[ $_SHOW_IDENTITY -gt 0 ]]
 	then
 		i=0
 		for a in $_LIVE_AGENT_LIST ; do
 			sock=${a/:*/}
 			_LIVE_AGENT_SOCK_LIST[$i]=$sock
-			akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l) 
-			printf "%i) %s\n\t%s\n" $((i+1)) "$a" "$akeys"
+			akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l)
+      # technically we could have multiple keys forwarded
+      # But I haven't seen anyone do it
+      key_size=$(echo ${akeys} | awk '{print $1}')
+      fingerprint=$(echo ${akeys} | awk '{print $2}')
+      remote_name=$(echo ${akeys} | awk '{print $3}')
+      authorized_entry=$(fingerprints ~/.ssh/authorized_keys | grep $fingerprint)
+			printf "%i) %s forwards %s\n\t%s\n" $((i+1)) "$a" "$remote_name"  "$authorized_entry"
 			i=$((i+1))
 		done
 	else
