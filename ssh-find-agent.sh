@@ -23,7 +23,8 @@
 # THE SOFTWARE.
 
 _LIVE_AGENT_LIST=""
-declare -a _LIVE_AGENT_SOCK_LIST=()
+declare -a _LIVE_AGENT_SOCK_LIST
+_LIVE_AGENT_SOCK_LIST=()
 
 _debug_print() {
 	if [[ $_DEBUG -gt 0 ]]
