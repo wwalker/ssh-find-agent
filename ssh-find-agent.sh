@@ -194,6 +194,11 @@ set_ssh_agent_socket() {
 		export SSH_AUTH_SOCK=$SOCK
 	fi
 
+     # set agent pid
+     if [ -n "$SSH_AUTH_SOCK" ] ; then
+          export SSH_AGENT_PID=$((`echo $SSH_AUTH_SOCK | cut -d. -f2` + 1))
+     fi
+
 	return 0
 }
 
