@@ -140,7 +140,9 @@ find_all_agent_sockets() {
 	_LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1 | uniq)
 	_LIVE_AGENT_SOCK_LIST=()
 	_debug_print "SORTED: $_LIVE_AGENT_LIST"
-  _FINGERPRINTS=$(fingerprints ~/.ssh/authorized_keys)
+	if [ -e ~/.ssh/authorized_keys ] ; then
+  		_FINGERPRINTS=$(fingerprints ~/.ssh/authorized_keys)
+	fi
 	if [[ $_SHOW_IDENTITY -gt 0 ]]
 	then
 		i=0
@@ -153,7 +155,9 @@ find_all_agent_sockets() {
       key_size=$(echo ${akeys} | awk '{print $1}')
       fingerprint=$(echo ${akeys} | awk '{print $2}')
       remote_name=$(echo ${akeys} | awk '{print $3}')
-      authorized_entry=$(fingerprints ~/.ssh/authorized_keys | grep $fingerprint)
+      if [ -e ~/.ssh/authorized_keys ] ; then
+      	authorized_entry=$(fingerprints ~/.ssh/authorized_keys | grep $fingerprint)
+      fi
       comment=$(echo ${authorized_entry} | awk '{print $3,$4,$5,$6,$7}')
 		  printf "export SSH_AUTH_SOCK=%s \t#%i) \t%s\n" "$sock" $((i+1)) "$comment"
 			i=$((i+1))
