@@ -2,6 +2,10 @@
 
 ssh-find-agent is a tool for locating existing ssh compatible agent processes (e.g., ssh-agent, gpg-agent, gnome-keyring, osx-keychain); and, optionally, setting `SSH_AUTH_SOCK` accordingly.
 
+## Build Status
+
+[![Build Status](https://travis-ci.org/wwalker/ssh-find-agent.svg?branch=master)](https://travis-ci.org/wwalker/ssh-find-agent)
+
 ## Usage
 
 Somewhere in shell initialization (`~/.bashrc` or `~./.zshrc`)
