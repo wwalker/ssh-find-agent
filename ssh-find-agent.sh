@@ -3,17 +3,17 @@
 # Released under one of the versions of the MIT License.
 #
 # Copyright (C) 2011 by Wayne Walker <wwalker@solid-constructs.com>
-# 
+#
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
 # in the Software without restriction, including without limitation the rights
 # to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 # copies of the Software, and to permit persons to whom the Software is
 # furnished to do so, subject to the following conditions:
-# 
+#
 # The above copyright notice and this permission notice shall be included in
 # all copies or substantial portions of the Software.
-# 
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 # IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 # FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -116,10 +116,10 @@ find_live_ssh_agents() {
 }
 
 function fingerprints() {
-    local file="$1"
-    while read l; do
-        [[ -n $l && ${l###} = $l ]] && ssh-keygen -l -f /dev/stdin <<<$l
-    done < $file
+	local file="$1"
+	while read l; do
+		[[ -n $l && ${l###} = $l ]] && ssh-keygen -l -f /dev/stdin <<<$l
+	done < $file
 }
 
 find_all_agent_sockets() {
@@ -147,19 +147,19 @@ find_all_agent_sockets() {
 	then
 		i=0
 		for a in $_LIVE_AGENT_LIST ; do
-			sock=${a/:*/} 
+			sock=${a/:*/}
 			_LIVE_AGENT_SOCK_LIST[$i]=$sock
-      # technically we could have multiple keys forwarded
-      # But I haven't seen anyone do it
-      akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l)
-      key_size=$(echo ${akeys} | awk '{print $1}')
-      fingerprint=$(echo ${akeys} | awk '{print $2}')
-      remote_name=$(echo ${akeys} | awk '{print $3}')
-      if [ -e ~/.ssh/authorized_keys ] ; then
-      	authorized_entry=$(fingerprints ~/.ssh/authorized_keys | grep $fingerprint)
-      fi
-      comment=$(echo ${authorized_entry} | awk '{print $3,$4,$5,$6,$7}')
-		  printf "export SSH_AUTH_SOCK=%s \t#%i) \t%s\n" "$sock" $((i+1)) "$comment"
+			# technically we could have multiple keys forwarded
+			# But I haven't seen anyone do it
+			akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l)
+			key_size=$(echo ${akeys} | awk '{print $1}')
+			fingerprint=$(echo ${akeys} | awk '{print $2}')
+			remote_name=$(echo ${akeys} | awk '{print $3}')
+			if [ -e ~/.ssh/authorized_keys ] ; then
+				authorized_entry=$(fingerprints ~/.ssh/authorized_keys | grep $fingerprint)
+			fi
+			comment=$(echo ${authorized_entry} | awk '{print $3,$4,$5,$6,$7}')
+			printf "export SSH_AUTH_SOCK=%s \t#%i) \t%s\n" "$sock" $((i+1)) "$comment"
 			i=$((i+1))
 		done
 	else
@@ -198,10 +198,10 @@ set_ssh_agent_socket() {
 		export SSH_AUTH_SOCK=$SOCK
 	fi
 
-     # set agent pid
-     if [ -n "$SSH_AUTH_SOCK" ] ; then
-          export SSH_AGENT_PID=$((`echo $SSH_AUTH_SOCK | cut -d. -f2` + 1))
-     fi
+	# set agent pid
+	if [ -n "$SSH_AUTH_SOCK" ] ; then
+		export SSH_AGENT_PID=$((`echo $SSH_AUTH_SOCK | cut -d. -f2` + 1))
+	fi
 
 	return 0
 }
