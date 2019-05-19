@@ -206,7 +206,8 @@ set_ssh_agent_socket() {
 	return 0
 }
 
-ssh-find-agent() {
+# Renamed for https://github.com/wwalker/ssh-find-agent/issues/12
+ssh_find_agent() {
 	if [[ "$1" = "-c" ]] || [[ "$1" = "--choose" ]]
 	then
 		set_ssh_agent_socket -c
@@ -219,4 +220,11 @@ ssh-find-agent() {
 		find_all_agent_sockets -i
 		return 0
 	fi
+}
+
+# Original function name is still supported.
+# https://github.com/wwalker/ssh-find-agent/issues/12 points out that I
+# should use ssh_find_agent() for best compatibility.
+ssh-find-agent() {
+	ssh_find_agent "$@"
 }
