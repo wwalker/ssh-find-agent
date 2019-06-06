@@ -1,6 +1,6 @@
 #!/bin/bash
 
-TEST_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+TEST_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" > /dev/null && pwd )"
 SSH_FIND_AGENT_DIR=${TEST_DIR}/..
 SSH_FIND_AGENT=${SSH_FIND_AGENT_DIR}/ssh-find-agent.sh
 
