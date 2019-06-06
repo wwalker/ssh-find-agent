@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Copyright (C) 2011 by Wayne Walker <wwalker@solid-constructs.com>
 #
 # Released under one of the versions of the MIT License.
