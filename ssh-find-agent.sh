@@ -202,7 +202,7 @@ set_ssh_agent_socket() {
 
 	# set agent pid
 	if [ -n "$SSH_AUTH_SOCK" ] ; then
-		export SSH_AGENT_PID=$(($(echo "$SSH_AUTH_SOCK" | cut -d. -f2) + 1))
+		export SSH_AGENT_PID=$(($(basename "$SSH_AUTH_SOCK" | cut -d. -f2) + 1))
 	fi
 
 	return 0
