@@ -12,7 +12,7 @@ ssh_find_agent is a tool for locating existing ssh compatible agent processes (e
 Somewhere in shell initialization (`~/.bashrc` or `~./.zshrc`)
 
 ```bash
-. ssh_find_agent.sh
+. ssh-find-agent.sh
 ```
 
 Add the following to automatically choose the first agent
