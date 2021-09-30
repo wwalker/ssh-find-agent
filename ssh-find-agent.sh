@@ -60,7 +60,7 @@ find_all_osx_keychain_agent_sockets() {
 
 test_agent_socket() {
 	local SOCKET=$1
-	SSH_AUTH_SOCK=$SOCKET ssh-add -l 2> /dev/null > /dev/null
+	SSH_AUTH_SOCK=$SOCKET timeout 0.4 ssh-add -l 2> /dev/null > /dev/null
 	result=$?
 
 	_debug_print $result
@@ -68,7 +68,7 @@ test_agent_socket() {
 	if [[ $result -eq 0 ]]
 	then
 		# contactible and has keys loaded
-        _KEY_COUNT=$(SSH_AUTH_SOCK=$SOCKET ssh-add -l | wc -l | tr -d ' ')
+        _KEY_COUNT=$(SSH_AUTH_SOCK=$SOCKET ssh-add -l |& grep -v 'error fetching identities for protocol 1: agent refused operation' | wc -l | tr -d ' ')
 	fi
 
 	if [[ $result -eq 1 ]]
@@ -155,7 +155,7 @@ find_all_agent_sockets() {
 			_LIVE_AGENT_SOCK_LIST[$i]=$sock
 			# technically we could have multiple keys forwarded
 			# But I haven't seen anyone do it
-			akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l)
+			akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l |& grep -v 'error fetching identities for protocol 1: agent refused operation' )
 			key_size=$(echo "${akeys}" | awk '{print $1}')
 			fingerprint=$(echo "${akeys}" | awk '{print $2}')
 			remote_name=$(echo "${akeys}" | awk '{print $3}')
