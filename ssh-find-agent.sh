@@ -68,7 +68,7 @@ test_agent_socket() {
   if [[ $result -eq 0 ]]
   then
     # contactible and has keys loaded
-        _KEY_COUNT=$(SSH_AUTH_SOCK=$SOCKET ssh-add -l |& grep -v 'error fetching identities for protocol 1: agent refused operation' | wc -l | tr -d ' ')
+    _KEY_COUNT=$(SSH_AUTH_SOCK=$SOCKET ssh-add -l |& grep -c 'error fetching identities for protocol 1: agent refused operation' )
   fi
 
   if [[ $result -eq 1 ]]
@@ -141,12 +141,14 @@ find_all_agent_sockets() {
   find_live_gnome_keyring_agents
   find_live_osx_keychain_agents
   _debug_print "$_LIVE_AGENT_LIST"
-  _LIVE_AGENT_LIST=$(echo $_LIVE_AGENT_LIST | tr ' ' '\n' | sort -n -t: -k 2 -k 1 | uniq)
+  _LIVE_AGENT_LIST=$(printf '%s\n' "$_LIVE_AGENT_LIST" | tr ' ' '\n' | sort -n -t: -k 2 -k 1 | uniq)
   _LIVE_AGENT_SOCK_LIST=()
   _debug_print "SORTED: $_LIVE_AGENT_LIST"
+
   if [ -e ~/.ssh/authorized_keys ] ; then
     _FINGERPRINTS=$(fingerprints ~/.ssh/authorized_keys)
   fi
+
   if [[ $_SHOW_IDENTITY -gt 0 ]]
   then
     i=0
@@ -210,20 +212,29 @@ set_ssh_agent_socket() {
   return 0
 }
 
+_sfa_usage(){
+  printf 'ssh-find-agent <[-c|--choose|-a|--auto|-h|--help]>\n'
+}
+
 # Renamed for https://github.com/wwalker/ssh-find-agent/issues/12
 ssh_find_agent() {
-  if [[ "$1" = "-c" ]] || [[ "$1" = "--choose" ]]
-  then
-    set_ssh_agent_socket -c
-    return $?
-  elif [[ "$1" = "-a" ]] || [[ "$1" = "--auto" ]]
-  then
-    set_ssh_agent_socket
-    return $?
-  else
-    find_all_agent_sockets -i
-    return 0
-  fi
+  case $1 in
+    -c|--choose)
+      set_ssh_agent_socket -c
+      return $?
+      ;;
+    -a|--auto)
+      set_ssh_agent_socket
+      return $?
+      ;;
+    "")
+      find_all_agent_sockets -i
+      return 0
+      ;;
+    *)
+      _sfa_usage
+      ;;
+  esac
 }
 
 # Original function name is still supported.
