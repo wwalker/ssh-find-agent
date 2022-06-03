@@ -73,7 +73,7 @@ test_agent_socket() {
 
   if [[ $result -eq 1 ]]
   then
-    # contactible butno keys loaded
+    # contactible but no keys loaded
     _KEY_COUNT=0
   fi
 
