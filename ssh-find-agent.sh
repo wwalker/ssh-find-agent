@@ -77,6 +77,12 @@ test_agent_socket() {
     _KEY_COUNT=0
   fi
 
+  if [[ $result -eq 2 ]]
+  then
+    # socket is dead, delete it
+    rm -r ${SOCKET%/*}
+  fi
+
   if [[ ( ( $result -eq 0 ) || ( $result -eq 1 ) ) ]]
   then
     if [[ -n "$_LIVE_AGENT_LIST" ]]
