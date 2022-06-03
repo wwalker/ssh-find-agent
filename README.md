@@ -36,12 +36,18 @@ To choose the agent manually run
 ssh_find_agent -c
 ```
 
+NOTE: The choose option is Useful when you actually want multiple agents forwaded.  eg. pairing
+
 To list the agents run
 ```bash
 ssh_find_agent
 ```
 
-NOTE: The choose option is Useful when you actually want multiple agents forwaded.  eg. pairing
+This will return a list of export commands that can be used to set the socket.
+Should this output be executed it will set the socket to the last agent found.
+```bash
+eval $(ssh_find_agent)
+```
 
 ## Status
 
