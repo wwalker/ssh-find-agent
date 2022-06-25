@@ -80,7 +80,7 @@ test_agent_socket() {
   if [[ $result -eq 2 ]]
   then
     # socket is dead, delete it
-    rm -r ${SOCKET%/*}
+    rm -r ${SOCKET%/*} 2>&1 1>/dev/null
   fi
 
   if [[ ( ( $result -eq 0 ) || ( $result -eq 1 ) ) ]]
