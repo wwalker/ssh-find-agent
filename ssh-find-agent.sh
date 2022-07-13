@@ -31,6 +31,13 @@ _LIVE_AGENT_SOCK_LIST=()
 # temp dir. Defaults to /tmp
 TMPDIR="${TMPDIR:-/tmp}"
 
+if ! command -v 'timeout' &>/dev/null; then
+cat <<EOF >&2
+ssh-find-agent.sh: 'timeout' command could not be found:
+  Please install 'coreutils' via your system's package manager
+EOF
+fi
+
 _debug_print() {
   if [[ $_DEBUG -gt 0 ]]
   then
