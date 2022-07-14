@@ -29,7 +29,16 @@ declare -a _LIVE_AGENT_SOCK_LIST
 _LIVE_AGENT_SOCK_LIST=()
 
 # temp dir. Defaults to /tmp
-TMPDIR="${TMPDIR:-/tmp}"
+_TMPDIR="${TMPDIR:-/tmp}"
+
+# Allow users to override _TMPDIR without requiring them to change
+# their shell's TMPDIR when sourcing the script. This is useful in the
+# context of custom shells (e.g. nix shells) where TMPDIR in the custom
+# shell can differ from the system's TMPDIR, but we want the script to
+# use the system's TMPDIR when sourced.
+if [[ -e "$_TMPDIR_OVERRIDE" ]]; then
+  _TMPDIR="$_TMPDIR_OVERRIDE"
+fi
 
 if ! command -v 'timeout' &>/dev/null; then
 cat <<EOF >&2
@@ -46,22 +55,22 @@ _debug_print() {
 }
 
 find_all_ssh_agent_sockets() {
-  _SSH_AGENT_SOCKETS=$( find "$TMPDIR" -maxdepth 2 -type s -name agent.\* 2> /dev/null | grep '/ssh-.*/agent.*' )
+  _SSH_AGENT_SOCKETS=$( find "$_TMPDIR" -maxdepth 2 -type s -name agent.\* 2> /dev/null | grep '/ssh-.*/agent.*' )
   _debug_print "$_SSH_AGENT_SOCKETS"
 }
 
 find_all_gpg_agent_sockets() {
-  _GPG_AGENT_SOCKETS=$( find "$TMPDIR" -maxdepth 2 -type s -name S.gpg-agent.ssh 2> /dev/null | grep '/gpg-.*/S.gpg-agent.ssh' )
+  _GPG_AGENT_SOCKETS=$( find "$_TMPDIR" -maxdepth 2 -type s -name S.gpg-agent.ssh 2> /dev/null | grep '/gpg-.*/S.gpg-agent.ssh' )
   _debug_print "$_GPG_AGENT_SOCKETS"
 }
 
 find_all_gnome_keyring_agent_sockets() {
-  _GNOME_KEYRING_AGENT_SOCKETS=$( find "$TMPDIR" -maxdepth 2 -type s -name ssh 2> /dev/null | grep '/keyring-.*/ssh$' )
+  _GNOME_KEYRING_AGENT_SOCKETS=$( find "$_TMPDIR" -maxdepth 2 -type s -name ssh 2> /dev/null | grep '/keyring-.*/ssh$' )
   _debug_print "$_GNOME_KEYRING_AGENT_SOCKETS"
 }
 
 find_all_osx_keychain_agent_sockets() {
-  _OSX_KEYCHAIN_AGENT_SOCKETS=$( find "$TMPDIR" -maxdepth 2 -type s -regex '.*/ssh-.*/agent..*$' 2> /dev/null )
+  _OSX_KEYCHAIN_AGENT_SOCKETS=$( find "$_TMPDIR" -maxdepth 2 -type s -regex '.*/ssh-.*/agent..*$' 2> /dev/null )
   _debug_print "$_OSX_KEYCHAIN_AGENT_SOCKETS"
 }
 
