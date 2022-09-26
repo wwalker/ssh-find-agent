@@ -96,7 +96,7 @@ test_agent_socket() {
   if [[ $result -eq 2 ]]
   then
     # socket is dead, delete it
-    rm -r ${SOCKET%/*} 2>&1 1>/dev/null
+    rm -rf "${SOCKET%/*}" 1>/dev/null 2>&1
   fi
 
   if [[ ( ( $result -eq 0 ) || ( $result -eq 1 ) ) ]]
@@ -167,6 +167,7 @@ find_all_agent_sockets() {
   _LIVE_AGENT_SOCK_LIST=()
   _debug_print "SORTED: $_LIVE_AGENT_LIST"
 
+  # shellcheck disable=SC2034
   if [ -e ~/.ssh/authorized_keys ] ; then
     _FINGERPRINTS=$(fingerprints ~/.ssh/authorized_keys)
   fi
@@ -180,8 +181,10 @@ find_all_agent_sockets() {
       # technically we could have multiple keys forwarded
       # But I haven't seen anyone do it
       akeys=$(SSH_AUTH_SOCK=$sock ssh-add -l |& grep -v 'error fetching identities for protocol 1: agent refused operation' )
+      # shellcheck disable=SC2034
       key_size=$(echo "${akeys}" | awk '{print $1}')
       fingerprint=$(echo "${akeys}" | awk '{print $2}')
+      # shellcheck disable=SC2034
       remote_name=$(echo "${akeys}" | awk '{print $3}')
       if [ -e ~/.ssh/authorized_keys ] ; then
         authorized_entry=$(fingerprints ~/.ssh/authorized_keys | grep "$fingerprint")
