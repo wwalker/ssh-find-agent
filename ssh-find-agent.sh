@@ -95,6 +95,11 @@ test_agent_socket() {
     rm -rf "${SOCKET%/*}" 1>/dev/null 2>&1
   fi
 
+  if [[ $result -eq 124 ]]; then
+    # timed out, socket is probably dead, try to delete it
+    rm -rf "${SOCKET%/*}" 1>/dev/null 2>&1
+  fi
+
   if [[ (($result -eq 0) || ($result -eq 1)) ]]; then
     if [[ -n "$_LIVE_AGENT_LIST" ]]; then
       _LIVE_AGENT_LIST="${_LIVE_AGENT_LIST} ${SOCKET}:$_KEY_COUNT"
