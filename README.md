@@ -1,6 +1,6 @@
-# ssh_find_agent
+# ssh-find-agent
 
-ssh_find_agent is a tool for locating existing ssh compatible agent processes (e.g., ssh-agent, gpg-agent, gnome-keyring, osx-keychain); and, optionally, setting `SSH_AUTH_SOCK` accordingly.
+ssh-find-agent is a tool for locating existing ssh compatible agent processes (e.g., ssh-agent, gpg-agent, gnome-keyring, osx-keychain); and, optionally, setting `SSH_AUTH_SOCK` accordingly.
 
 ## Build Status
 
@@ -12,42 +12,32 @@ ssh_find_agent is a tool for locating existing ssh compatible agent processes (e
 Somewhere in shell initialization (`~/.bashrc` or `~./.zshrc`)
 
 ```bash
-. ssh-find-agent.sh # for bash
-emulate ksh -c ". ssh-find-agent.sh" # for zsh
+source ssh-find-agent.sh # for bash
+emulate ksh -c "source ssh-find-agent.sh" # for zsh
 ```
 
 Add the following to automatically choose the first agent
 ```bash
-ssh_find_agent -a
-if [ -z "$SSH_AUTH_SOCK" ]
-then
-   eval $(ssh-agent) > /dev/null
-   ssh-add -l >/dev/null || alias ssh='ssh-add -l >/dev/null || ssh-add && unalias ssh; ssh'
-fi
-```
-
-... or, as `ssh_find_agent` with `-a` or `-c` returns non-zero if it cannot find a live-agent, simply:
-
-```bash
-ssh_find_agent -a || eval $(ssh-agent) > /dev/null
+ssh-add -l >&/dev/null || ssh-find-agent -a || eval $(ssh-agent) > /dev/null
 ```
 
 To choose the agent manually run
 ```bash
-ssh_find_agent -c
+ssh-find-agent -c
 ```
 
-NOTE: The choose option is Useful when you actually want multiple agents forwaded.  eg. pairing
+NOTE: The choose option is Useful when you actually want multiple agents forwarded.  E.g., while pairing.
 
 To list the agents run
 ```bash
-ssh_find_agent
+ssh-find-agent -l
 ```
 
 This will return a list of export commands that can be used to set the socket.
+
 Should this output be executed it will set the socket to the last agent found.
 ```bash
-eval $(ssh_find_agent)
+eval $(ssh-find-agent -l)
 ```
 
 ## Status
