@@ -219,6 +219,9 @@ ssh_find_agent() {
       sfa_set_ssh_agent_socket "$1"
       return $?
       ;;
+    -l | --list)
+      sfa_print_choose_menu -i
+      ;;
     *)
       sfa_usage
       ;;
