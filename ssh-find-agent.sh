@@ -89,7 +89,7 @@ sfa_test_agent_socket() {
     2 | 124)
       # socket is dead, delete it
       sfa_err 'socket (%s) is dead, removing it.\n' "$socket"
-      echo "rm -rf ${socket%/*}"
+      sfa_debug "rm -rf ${socket%/*}"
       rm -rf "${socket%/*}"
       ;;
     125 | 126 | 127)
