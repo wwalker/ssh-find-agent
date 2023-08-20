@@ -24,24 +24,43 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-# temp dir. Defaults to /tmp
-_TMPDIR="${TMPDIR:-/tmp}"
+sfa_init() {
+  _ssh_agent_sockets=()
+  _live_agent_list=()
+  _live_agent_sock_list=()
+  _sorted_live_agent_list=()
 
-# Allow users to override _TMPDIR without requiring them to change
-# their shell's TMPDIR when sourcing the script. This is useful in the
-# context of custom shells (e.g. nix shells) where TMPDIR in the custom
-# shell can differ from the system's TMPDIR, but we want the script to
-# use the system's TMPDIR when sourced.
-if [[ -e "$_TMPDIR_OVERRIDE" ]]; then
-  _TMPDIR="$_TMPDIR_OVERRIDE"
-fi
+  # Set $sfa_path array to the dirs to search for ssh-agent sockets
+  sfa_set_path
 
-if ! command -v 'timeout' &>/dev/null; then
-  cat <<EOF >&2
-ssh-find-agent.sh: 'timeout' command could not be found:
-  Please install 'coreutils' via your system's package manager
-EOF
-fi
+  if ! command -v 'timeout' &>/dev/null; then
+    printf "ssh-find-agent.sh: 'timeout' command could not be found.\n"
+    printf "  Please install 'coreutils' via your system's package manager.\n"
+  fi
+}
+
+# Allow users to override the default path to search for ssh-agent sockets
+# The first of the variable found is used to set the path:
+#   SSH_FIND_AGENT_PATH (colon separated dir list)
+#   _TMPDIR_OVERRIDE for legacy compatibility
+#   TMPDIR (if set) (plus /tmp due to ssh bug)
+sfa_set_path() {
+  sfa_path=()
+  if [[ -n "$SSH_FIND_AGENT_PATH" ]]; then
+    IFS=':' read -r -a sfa_path <<<"$SSH_FIND_AGENT_PATH"
+  else
+    # Maintain backwards compatibility with the old _TMPDIR_OVERRIDE variable
+    if [[ -n "$_TMPDIR_OVERRIDE" ]]; then
+      sfa_path=("$_TMPDIR_OVERRIDE")
+    else
+      if [[ -n "$TMPDIR" ]]; then
+        sfa_path=("/tmp" "$TMPDIR")
+      else
+        sfa_path=("/tmp")
+      fi
+    fi
+  fi
+}
 
 sfa_err() {
   # shellcheck disable=SC2059
@@ -49,17 +68,17 @@ sfa_err() {
 }
 
 sfa_debug() {
-  if (( _DEBUG > 0 )); then
+  if ((_DEBUG > 0)); then
     sfa_err "$@" 1>&2
   fi
 }
 
 sfa_find_all_agent_sockets() {
   _ssh_agent_sockets=$(
-    find "$_TMPDIR" -maxdepth 2 -type s -name agent.\* 2>/dev/null | grep '/ssh-.*/agent.*'
-    find "$_TMPDIR" -maxdepth 2 -type s -name S.gpg-agent.ssh 2>/dev/null | grep '/gpg-.*/S.gpg-agent.ssh'
-    find "$_TMPDIR" -maxdepth 2 -type s -name ssh 2>/dev/null | grep '/keyring-.*/ssh$'
-    find "$_TMPDIR" -maxdepth 2 -type s -regex '.*/ssh-.*/agent..*$' 2>/dev/null
+    find "${sfa_path[@]}" -maxdepth 2 -type s -name agent.\* 2>/dev/null | grep '/ssh-.*/agent.*'
+    find "${sfa_path[@]}" -maxdepth 2 -type s -name S.gpg-agent.ssh 2>/dev/null | grep '/gpg-.*/S.gpg-agent.ssh'
+    find "${sfa_path[@]}" -maxdepth 2 -type s -name ssh 2>/dev/null | grep '/keyring-.*/ssh$'
+    find "${sfa_path[@]}" -maxdepth 2 -type s -regex '.*/ssh-.*/agent..*$' 2>/dev/null
   )
   sfa_debug "$_ssh_agent_sockets"
 }
@@ -173,11 +192,17 @@ sfa_set_ssh_agent_socket() {
     -c | --choose)
       sfa_print_choose_menu -i
 
-      ((0 == ${#_live_agent_list[@]})) && { sfa_err 'No agents found.\n' ; return 1; }
+      ((0 == ${#_live_agent_list[@]})) && {
+        sfa_err 'No agents found.\n'
+        return 1
+      }
 
       read -p "Choose (1-${#_live_agent_sock_list[@]})? " -r choice
       if [ "$choice" -eq "$choice" ]; then
-        [[ -z "${_live_agent_sock_list[$choice]}" ]] && { sfa_err 'Invalid choice.\n' ; return 1; }
+        [[ -z "${_live_agent_sock_list[$choice]}" ]] && {
+          sfa_err 'Invalid choice.\n'
+          return 1
+        }
         printf 'Setting export SSH_AUTH_SOCK=%s\n' "${_live_agent_sock_list[$choice]}"
         export SSH_AUTH_SOCK=${_live_agent_sock_list[$choice]}
       fi
@@ -190,6 +215,8 @@ sfa_set_ssh_agent_socket() {
       export SSH_AUTH_SOCK=$sock
       ;;
     *)
+      usage
+      ;;
   esac
 
   # set agent pid - this is unreliable as the pid may be of the child rather than the agent
@@ -207,12 +234,7 @@ sfa_usage() {
 
 # Renamed for https://github.com/wwalker/ssh-find-agent/issues/12
 ssh_find_agent() {
-  declare -a _live_agent_list
-  declare -a _live_agent_sock_list
-  declare -a _sorted_live_agent_list
-  _ssh_agent_sockets=()
-  _live_agent_list=()
-  _live_agent_sock_list=()
+  sfa_init
 
   case $1 in
     -c | --choose | -a | --auto)
