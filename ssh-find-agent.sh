@@ -215,7 +215,7 @@ sfa_set_ssh_agent_socket() {
       export SSH_AUTH_SOCK=$sock
       ;;
     *)
-      usage
+      sfa_usage
       ;;
   esac
 
