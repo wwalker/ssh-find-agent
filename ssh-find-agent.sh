@@ -74,13 +74,14 @@ sfa_debug() {
 }
 
 sfa_find_all_agent_sockets() {
-  _ssh_agent_sockets=$(
-    find "${sfa_path[@]}" -maxdepth 2 -type s -name agent.\* 2>/dev/null | grep '/ssh-.*/agent.*'
-    find "${sfa_path[@]}" -maxdepth 2 -type s -name S.gpg-agent.ssh 2>/dev/null | grep '/gpg-.*/S.gpg-agent.ssh'
-    find "${sfa_path[@]}" -maxdepth 2 -type s -name ssh 2>/dev/null | grep '/keyring-.*/ssh$'
-    find "${sfa_path[@]}" -maxdepth 2 -type s -regex '.*/ssh-.*/agent..*$' 2>/dev/null
-  )
-  sfa_debug "$_ssh_agent_sockets"
+  _ssh_agent_sockets=($(
+    find "${sfa_path[@]}" -maxdepth 2 -type s -name agent.\* \
+      -o -name S.gpg-agent.ssh -o -name ssh -o -regex '.*/ssh-.*/agent..*$' \
+      2>/dev/null | grep -E \
+      '/ssh-.*/agent.*|/gpg-  .*/S.gpg-agent.ssh|/keyring-.*/ssh$|.*/ssh-.*/agent..*$'
+  ))
+
+  sfa_debug "${_ssh_agent_sockets[@]}"
 }
 
 sfa_test_agent_socket() {
