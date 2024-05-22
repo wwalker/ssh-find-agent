@@ -29,6 +29,7 @@ sfa_init() {
   _live_agent_list=()
   _live_agent_sock_list=()
   _sorted_live_agent_list=()
+  _sfa_timeout=1.0
 
   # Set $sfa_path array to the dirs to search for ssh-agent sockets
   sfa_set_path
@@ -87,7 +88,7 @@ sfa_find_all_agent_sockets() {
 sfa_test_agent_socket() {
   local socket=$1
   local output
-  output=$(SSH_AUTH_SOCK=$socket timeout 0.4 ssh-add -l 2>&1)
+  output=$(SSH_AUTH_SOCK=$socket timeout "$_sfa_timeout" ssh-add -l 2>&1)
   result=$?
 
   [[ "$output" == "error fetching identities: communication with agent failed" ]] && result=2
@@ -131,7 +132,7 @@ sfa_test_agent_socket() {
 }
 
 sfa_verify_sockets() {
-  for i in $_ssh_agent_sockets; do
+  for i in "${_ssh_agent_sockets[@]}"; do
     sfa_test_agent_socket "$i"
   done
 }
@@ -167,7 +168,7 @@ sfa_print_choose_menu() {
     i=$((i + 1))
     sock=${agent/*:/}
     if [[ "$1" = "-i" ]]; then
-      _live_agent_sock_list[$i]=$sock
+      _live_agent_sock_list[i]=$sock
 
       printf '#%i)\n' "$i"
       printf '    export SSH_AUTH_SOCK=%s\n' "$sock"
