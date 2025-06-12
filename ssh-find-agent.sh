@@ -30,6 +30,7 @@ sfa_init() {
   _live_agent_sock_list=()
   _sorted_live_agent_list=()
   _sfa_timeout=1.0
+  _sfa_no_timeout_command=0
 
   # Set $sfa_path array to the dirs to search for ssh-agent sockets
   sfa_set_path
@@ -37,6 +38,9 @@ sfa_init() {
   if ! command -v 'timeout' &>/dev/null; then
     printf "ssh-find-agent.sh: 'timeout' command could not be found.\n"
     printf "  Please install 'coreutils' via your system's package manager.\n"
+    printf "Meanwhile, we will run without \`timeout\` support.\n"
+    printf "  This may cause delays or complete hangs if the agent is slow or unresponsive.\n"
+    _sfa_no_timeout_command=1
   fi
 }
 
@@ -88,7 +92,12 @@ sfa_find_all_agent_sockets() {
 sfa_test_agent_socket() {
   local socket=$1
   local output
-  output=$(SSH_AUTH_SOCK=$socket timeout "$_sfa_timeout" ssh-add -l 2>&1)
+
+  if [[ _sfa_no_timeout_command -eq 1 ]]; then
+    output=$(SSH_AUTH_SOCK=$socket sh-add -l 2>&1)
+  else
+    output=$(SSH_AUTH_SOCK=$socket timeout "$_sfa_timeout" ssh-add -l 2>&1)
+  fi
   result=$?
 
   [[ "$output" == "error fetching identities: communication with agent failed" ]] && result=2
