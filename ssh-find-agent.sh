@@ -235,8 +235,14 @@ sfa_set_ssh_agent_socket() {
   esac
 
   # set agent pid - this is unreliable as the pid may be of the child rather than the agent
+  # Note: newer OpenSSH socket names (s.*.agent.*) don't contain the PID
   if [ -n "$SSH_AUTH_SOCK" ]; then
-    export SSH_AGENT_PID=$(($(basename "$SSH_AUTH_SOCK" | cut -d. -f2) + 1))
+    local sock_basename
+    sock_basename=$(basename "$SSH_AUTH_SOCK")
+    # Only try to extract PID from old-style socket names (agent.*)
+    if [[ "$sock_basename" =~ ^agent\.[0-9]+$ ]]; then
+      export SSH_AGENT_PID=$(($(echo "$sock_basename" | cut -d. -f2) + 1))
+    fi
   fi
 
   return 0
