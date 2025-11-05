@@ -240,8 +240,11 @@ sfa_set_ssh_agent_socket() {
     local sock_basename
     sock_basename=$(basename "$SSH_AUTH_SOCK")
     # Only try to extract PID from old-style socket names (agent.*)
-    if [[ "$sock_basename" =~ ^agent\.[0-9]+$ ]]; then
-      export SSH_AGENT_PID=$(($(echo "$sock_basename" | cut -d. -f2) + 1))
+    if [[ "$sock_basename" =~ ^agent\.([0-9]+)$ ]]; then
+      local pid_candidate="${BASH_REMATCH[1]}"
+      if [[ "$pid_candidate" =~ ^[0-9]+$ ]]; then
+        export SSH_AGENT_PID=$((pid_candidate + 1))
+      fi
     fi
   fi
 
