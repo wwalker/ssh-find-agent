@@ -58,10 +58,13 @@ sfa_set_path() {
     if [[ -n "$_TMPDIR_OVERRIDE" ]]; then
       sfa_path=("$_TMPDIR_OVERRIDE")
     else
+      # Add ~/.ssh/agent to support newer OpenSSH versions
+      # See: https://github.com/openssh/openssh-portable/commit/80162f9d7e7eadca4ffd0bd1c015d38cb1821ab6
+      local ssh_agent_dir="${HOME}/.ssh/agent"
       if [[ -n "$TMPDIR" ]]; then
-        sfa_path=("/tmp" "$TMPDIR")
+        sfa_path=("/tmp" "$TMPDIR" "$ssh_agent_dir")
       else
-        sfa_path=("/tmp")
+        sfa_path=("/tmp" "$ssh_agent_dir")
       fi
     fi
   fi
@@ -81,9 +84,10 @@ sfa_debug() {
 sfa_find_all_agent_sockets() {
   _ssh_agent_sockets=($(
     find "${sfa_path[@]}" -maxdepth 2 -type s -name agent.\* \
-      -o -name S.gpg-agent.ssh -o -name ssh -o -regex '.*/ssh-.*/agent..*$' \
+      -o -name S.gpg-agent.ssh -o -name ssh -o -name 's.*.agent.*' \
+      -o -regex '.*/ssh-.*/agent..*$' \
       2>/dev/null | grep -E \
-      '/ssh-.*/agent.*|/gpg-  .*/S.gpg-agent.ssh|/keyring-.*/ssh$|.*/ssh-.*/agent..*$'
+      '/ssh-.*/agent.*|/gpg-  .*/S.gpg-agent.ssh|/keyring-.*/ssh$|.*/ssh-.*/agent..*$|s\..*\.agent\..*'
   ))
 
   sfa_debug "${_ssh_agent_sockets[@]}"
