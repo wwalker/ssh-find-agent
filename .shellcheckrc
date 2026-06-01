@@ -1,0 +1,6 @@
+disable=SC2230 # 'which' is non-standard. Use builtin 'command -v' instead.
+disable=SC2196 # 'egrep' is non-standard and deprecated. Use 'grep -E' instead
+disable=SC2002 # useless use of cat
+disable=SC1090 # non-constant source
+disable=SC1091 # Not following: ... was not specified as input
+disable=SC2126 # Consider using 'grep -c' instead of 'grep|wc -l'
