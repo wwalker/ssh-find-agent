@@ -82,13 +82,16 @@ sfa_debug() {
 }
 
 sfa_find_all_agent_sockets() {
-  _ssh_agent_sockets=($(
-    find "${sfa_path[@]}" -maxdepth 2 -type s -name agent.\* \
-      -o -name S.gpg-agent.ssh -o -name ssh -o -name 's.*.agent.*' \
+  mapfile -t _ssh_agent_sockets < <(
+    find "${sfa_path[@]}" -maxdepth 2 -type s \( \
+      -name 'agent.*' \
+      -o -name 'S.gpg-agent.ssh' \
+      -o -name 'ssh' \
+      -o -name 's.*.agent.*' \
       -o -regex '.*/ssh-.*/agent..*$' \
-      2>/dev/null | grep -E \
-      '/ssh-.*/agent.*|/gpg-  .*/S.gpg-agent.ssh|/keyring-.*/ssh$|.*/ssh-.*/agent..*$|s\..*\.agent\..*'
-  ))
+      \) 2>/dev/null |
+      grep -E '/ssh-.*/agent.*|/gpg-.*/S.gpg-agent.ssh|/keyring-.*/ssh$|.*/ssh-.*/agent..*$|s\..*\.agent\..*'
+  )
 
   sfa_debug "${_ssh_agent_sockets[@]}"
 }
@@ -96,27 +99,23 @@ sfa_find_all_agent_sockets() {
 sfa_test_agent_socket() {
   local socket=$1
   local output
+  local -i result
+  local -a _keys
 
-  if [[ _sfa_no_timeout_command -eq 1 ]]; then
-    output=$(SSH_AUTH_SOCK=$socket sh-add -l 2>&1)
+  if [[ "$_sfa_no_timeout_command" -eq 1 ]]; then
+    output=$(SSH_AUTH_SOCK="$socket" ssh-add -l 2>&1)
   else
-    output=$(SSH_AUTH_SOCK=$socket timeout "$_sfa_timeout" ssh-add -l 2>&1)
+    output=$(SSH_AUTH_SOCK="$socket" timeout "$_sfa_timeout" ssh-add -l 2>&1)
   fi
   result=$?
 
   [[ "$output" == "error fetching identities: communication with agent failed" ]] && result=2
-  sfa_debug $result
+  sfa_debug '%s\n' "$result"
 
   case $result in
     0 | 1 | 141)
       # contactible and has keys loaded
-      {
-        OIFS="$IFS"
-        IFS=$'\n'
-        # shellcheck disable=SC2207
-        _keys=($(SSH_AUTH_SOCK=$socket ssh-add -l 2>/dev/null))
-        IFS="$OIFS"
-      }
+      mapfile -t _keys < <(SSH_AUTH_SOCK="$socket" ssh-add -l 2>/dev/null)
       _live_agent_list+=("${#_keys[@]}:$socket")
       return 0
       ;;
@@ -167,14 +166,15 @@ sfa_print_choose_menu() {
   sfa_verify_sockets
   sfa_debug '<%s>\n' "${_live_agent_list[@]}"
 
-  # shellcheck disable=SC2207
-  IFS=$'\n' _sorted_live_agent_list=($(sort -u <<<"${_live_agent_list[*]}"))
-  unset IFS
+  mapfile -t _sorted_live_agent_list < <(
+    printf '%s\n' "${_live_agent_list[@]}" | sort -u
+  )
 
   sfa_debug "SORTED:\n"
   sfa_debug '    <%s>\n' "${_sorted_live_agent_list[@]}"
 
   local i=0
+  local agent
   local sock
 
   for agent in "${_sorted_live_agent_list[@]}"; do
@@ -203,6 +203,9 @@ sfa_print_choose_menu() {
 }
 
 sfa_set_ssh_agent_socket() {
+  local choice
+  local sock
+
   case $1 in
     -c | --choose)
       sfa_print_choose_menu -i
@@ -213,13 +216,16 @@ sfa_set_ssh_agent_socket() {
       }
 
       read -p "Choose (1-${#_live_agent_sock_list[@]})? " -r choice
-      if [ "$choice" -eq "$choice" ]; then
+      if [[ "$choice" =~ ^[0-9]+$ ]]; then
         [[ -z "${_live_agent_sock_list[$choice]}" ]] && {
           sfa_err 'Invalid choice.\n'
           return 1
         }
         printf 'Setting export SSH_AUTH_SOCK=%s\n' "${_live_agent_sock_list[$choice]}"
-        export SSH_AUTH_SOCK=${_live_agent_sock_list[$choice]}
+        export SSH_AUTH_SOCK="${_live_agent_sock_list[$choice]}"
+      else
+        sfa_err 'Invalid choice.\n'
+        return 1
       fi
       ;;
     -a | --auto)
@@ -227,7 +233,7 @@ sfa_set_ssh_agent_socket() {
       sock=$(sfa_print_choose_menu | tail -n -1)
       [[ -z "$sock" ]] && return 1
       sfa_debug 'export SSH_AUTH_SOCK=%s\n' "$sock"
-      export SSH_AUTH_SOCK=$sock
+      export SSH_AUTH_SOCK="$sock"
       ;;
     *)
       sfa_usage
